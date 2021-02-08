@@ -19,6 +19,16 @@ function assert_ratio(img, expected) {
   assert_approx_equals(parseInt(getComputedStyle(img).width, 10) / parseInt(getComputedStyle(img).height, 10), expected, epsilon);
 }
 
+function test_computed_style(width, height, expected) {
+  var video = document.createElement("video");
+  if (width !== null)
+    video.setAttribute("width", width);
+  if (height !== null)
+    video.setAttribute("height", height);
+  document.body.appendChild(video);
+  assert_equals(getComputedStyle(video).aspectRatio, expected, "Checking computed style for width=" + width + ", height=" + height);
+}
+
 t.step(function() {
   var video = document.getElementById("contained");
   video.src = getVideoURI('/media/2x2-green');
@@ -44,4 +54,21 @@ t.step(function() {
     assert_ratio(video, 1);
   });
 }, "aspect ratio for regular video");
+
+test(function() {
+  test_computed_style("10", "20", "auto 10 / 20");
+  test_computed_style("0", "1", "auto 0 / 1");
+  test_computed_style("1", "0", "auto 1 / 0");
+  test_computed_style("0", "0", "auto 0 / 0");
+  test_computed_style(".5", "1.5", "auto 0.5 / 1.5");
+}, "Computed style");
+
+test(function() {
+  test_computed_style(null, null, "auto");
+  test_computed_style("10", null, "auto");
+  test_computed_style(null, "20", "auto");
+  test_computed_style("xx", "20", "auto");
+  test_computed_style("10%", "20", "auto");
+}, "Computed style for invalid ratios");
+
 </script>
