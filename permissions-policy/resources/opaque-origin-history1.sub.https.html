@@ -1,0 +1,20 @@
+<script>
+  function respond() {
+    parent.postMessage(
+      document.fullscreenEnabled ?
+      'fullscreen enabled in opaque-origin-history1.html' :
+      'fullscreen disabled in opaque-origin-history1.html',
+      '*'
+    );
+  }
+
+  window.addEventListener('message', e => {
+    if (e.data == 'fullscreen enabled?') {
+      respond();
+      location.assign(
+        "https://{{domains[]}}:{{location[port]}}/permissions-policy/resources/opaque-origin2.https.html");
+    } else if (e.data == 'fullscreen enabled after history navigation?') {
+      respond();
+    }
+  });
+</script>

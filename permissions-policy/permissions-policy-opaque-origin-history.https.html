@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<body>
+  <script src=/resources/testharness.js></script>
+  <script src=/resources/testharnessreport.js></script>
+  <script>
+
+    function post_message_promise(target, message) {
+      return new Promise((resolve, _) => {
+        // Post message until a response is received.
+        const timerId = setInterval(() => target.postMessage(message, '*'), 10);
+        window.addEventListener('message', e => {
+          clearInterval(timerId);
+          resolve(e.data);
+        }, { once: true });
+      });
+    }
+
+    promise_test(async () => {
+      // - opaque-origin-history1.html navigates itself to opaque-origin-history2.html.
+      // - opaque-origin-history2.html call window.history.back() to navigate
+      // back to opaque-origin-history1.html
+      // - opaque-origin-history1.html should still be able to access fullscreen
+      // feature after the history.back() navigation.
+      const iframe = document.createElement('iframe');
+      // sandbox iframe so that it has opaque origin.
+      iframe.sandbox = 'allow-scripts';
+      iframe.src = 'resources/opaque-origin-history1.sub.https.html';
+      iframe.allow = "fullscreen 'src'";
+      document.body.appendChild(iframe);
+
+      await new Promise((resolve, _) => iframe.onload = resolve)
+
+      assert_equals(
+        await post_message_promise(iframe.contentWindow, 'fullscreen enabled?'),
+        'fullscreen enabled in opaque-origin-history1.html'
+      );
+
+      assert_equals(
+        await post_message_promise(iframe.contentWindow, 'fullscreen enabled after history navigation?'),
+        'fullscreen enabled in opaque-origin-history1.html'
+      );
+    });
+  </script>
+</body>
