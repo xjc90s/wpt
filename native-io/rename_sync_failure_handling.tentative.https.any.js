@@ -11,17 +11,12 @@ setup(() => {
 });
 
 test(testCase => {
-  const file1 = nativeIO.openSync('test_file_1');
-  const file2 = nativeIO.openSync('test_file_2');
-  testCase.add_cleanup(() => {
-    file1.close();
-    file2.close();
-  });
-
-  const writtenBytes1 = Uint8Array.from([64, 65, 66, 67]);
-  file1.write(writtenBytes1, 0);
-  const writtenBytes2 = Uint8Array.from([96, 97, 98, 99]);
-  file2.write(writtenBytes2, 0);
+  const writtenBytes1 = [64, 65, 66, 67];
+  const writtenBytes2 = [96, 97, 98, 99];
+  const file1 = createFileSync(testCase, 'test_file_1', writtenBytes1,
+                               /*deleteAfter=*/false);
+  const file2 = createFileSync(testCase, 'test_file_2', writtenBytes2,
+                               /*deleteAfter=*/false);
 
   file1.close();
   file2.close();
