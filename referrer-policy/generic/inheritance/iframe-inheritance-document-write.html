@@ -7,14 +7,24 @@
 <meta name="referrer" content="origin">
 <div id="log"></div>
 <script>
-async_test(t => {
-  window.addEventListener("message", t.step_func_done(msg => {
-    assert_equals(msg.data.referrer, self.origin + "/");
-  }));
+  let reportedReferrer = () => {
+    return new Promise(resolve => {
+      window.addEventListener("message", msg => resolve(msg.data.referrer));
+    });
+  };
 
   const iframe = document.createElement("iframe");
-  document.body.appendChild(iframe);
-  iframe.contentDocument.write(createScriptString(get_host_info().REMOTE_ORIGIN));
-  iframe.contentDocument.close();
-});
+  promise_test(async t => {
+    let referrer_1 = reportedReferrer();
+    iframe.srcdoc = `<head><meta name="referrer" content="unsafe-url"></head>`
+      + createScriptString(get_host_info().REMOTE_ORIGIN, location.origin + "/custom");
+    document.body.appendChild(iframe);
+    assert_equals(await referrer_1, self.origin + "/custom", "1");
+
+    let referrer_2 = reportedReferrer();
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(createScriptString(get_host_info().REMOTE_ORIGIN, location.origin + "/custom"));
+    iframe.contentDocument.close();
+    assert_equals(await referrer_2, self.origin + "/custom", "2");
+  }, "document.open should not change the referrer policy of the opened document.");
 </script>
