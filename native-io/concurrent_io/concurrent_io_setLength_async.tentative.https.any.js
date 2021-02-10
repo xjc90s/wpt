@@ -14,6 +14,9 @@ for (let op of kOperations) {
 
     const res = op.prepare();
 
+    let available_capacity = await nativeIO.requestCapacity(1);
+    assert_greater_than_equal(available_capacity, 1);
+
     const setLengthPromise = file.setLength(5);
     await op.assertRejection(testCase, file, res);
 
@@ -22,11 +25,11 @@ for (let op of kOperations) {
     const readSharedArrayBuffer = new SharedArrayBuffer(5);
     const readBytes = new Uint8Array(readSharedArrayBuffer);
     assert_equals(await file.read(readBytes, 0), 5,
-                  `NativeIOFile.read() should not fail after a rejected ` +
-                    `${op.name}() during setLength().`);
+      `NativeIOFile.read() should not fail after a rejected ` +
+      `${op.name}() during setLength().`);
     assert_array_equals(readBytes, [64, 65, 66, 67, 0],
-                        `Rejecting ${op.name}() during setLength()` +
-                          ` should not change the file.`);
+      `Rejecting ${op.name}() during setLength()` +
+      ` should not change the file.`);
     op.assertUnchanged(res);
   }, `${op.name}() rejects while setLength() is resolving.`);
 };

@@ -10,22 +10,12 @@ setup(async () => {
 });
 
 promise_test(async testCase => {
-  const file1 = await nativeIO.open('test_file_1');
-  const file2 = await nativeIO.open('test_file_2');
-  testCase.add_cleanup(async () => {
-    await file1.close();
-    await file2.close();
-  });
-
-  const writeSharedArrayBuffer1 = new SharedArrayBuffer(4);
-  const writtenBytes1 = new Uint8Array(writeSharedArrayBuffer1);
-  writtenBytes1.set([64, 65, 66, 67]);
-  const writeSharedArrayBuffer2 = new SharedArrayBuffer(4);
-  const writtenBytes2 = new Uint8Array(writeSharedArrayBuffer2);
-  writtenBytes2.set([96, 97, 98, 99]);
-
-  await file1.write(writtenBytes1, 0);
-  await file2.write(writtenBytes2, 0);
+  const writtenBytes1 = [64, 65, 66, 67];
+  const writtenBytes2 = [96, 97, 98, 99];
+  const file1 = await createFile(testCase, 'test_file_1', writtenBytes1,
+                                 /*deleteAfter=*/false);
+  const file2 = await createFile(testCase, 'test_file_2', writtenBytes2,
+                                 /*deleteAfter=*/false);
   await file1.close();
   await file2.close();
 

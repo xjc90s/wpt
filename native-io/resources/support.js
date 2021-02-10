@@ -8,19 +8,29 @@ const kBadNativeIoNames = [
 
 // Returns a handle to a newly created file that holds some data.
 //
-// The file will be closed and deleted when the test ends.
-async function createFile(testCase, fileName) {
+// The file will be closed and deleted when the test ends. The capacity for the
+// data written by this function will then be released.
+async function createFile(testCase, fileName, data = [64, 65, 66, 67],
+  deleteAfter = true) {
   const file = await nativeIO.open(fileName);
+
+  const granted_capacity = await nativeIO.requestCapacity(data.length);
+  assert_greater_than_equal(granted_capacity, data.length);
+
   testCase.add_cleanup(async () => {
     await file.close();
-    await nativeIO.delete(fileName);
+    if (deleteAfter) {
+      await nativeIO.delete(fileName);
+      await nativeIO.releaseCapacity(granted_capacity);
+    }
   });
 
-  const writeSharedArrayBuffer = new SharedArrayBuffer(4);
+  const writeSharedArrayBuffer = new SharedArrayBuffer(data.length);
   const writtenBytes = new Uint8Array(writeSharedArrayBuffer);
-  writtenBytes.set([64, 65, 66, 67]);
+  writtenBytes.set(data);
   const writeCount = await file.write(writtenBytes, 0);
-  assert_equals(writeCount, 4);
+  assert_equals(writeCount, data.length,
+    'NativeIOFile.write() should resolve with the number of bytes written');
 
   return file;
 }

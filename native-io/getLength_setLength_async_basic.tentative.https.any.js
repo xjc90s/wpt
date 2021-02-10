@@ -5,16 +5,7 @@
 'use strict';
 
 promise_test(async testCase => {
-  const file = await nativeIO.open('test_file');
-  testCase.add_cleanup(async () => {
-    await file.close();
-    await nativeIO.delete('test_file');
-  });
-
-  const writeSharedArrayBuffer = new SharedArrayBuffer(4);
-  const writtenBytes = new Uint8Array(writeSharedArrayBuffer);
-  writtenBytes.set([97, 98, 99, 100]);
-  await file.write(writtenBytes, 0);
+  const file = await createFile(testCase, 'test_file', [97, 98, 99, 100]);
 
   await file.setLength(3);
   const readBytes = await readIoFile(file);
@@ -29,16 +20,11 @@ promise_test(async testCase => {
       'new length');
 
 promise_test(async testCase => {
-  const file = await nativeIO.open('test_file');
-  testCase.add_cleanup(async () => {
-    await file.close();
-    await nativeIO.delete('test_file');
-  });
+  const file = await createFile(testCase, 'test_file', [97, 98, 99, 100]);
 
-  const writeSharedArrayBuffer = new SharedArrayBuffer(4);
-  const writtenBytes = new Uint8Array(writeSharedArrayBuffer);
-  writtenBytes.set([97, 98, 99, 100]);
-  await file.write(writtenBytes, 0);
+  let available_capacity = await nativeIO.requestCapacity(1);
+  assert_equals(available_capacity, 1,
+    "nativeIO.requestCapacity should grant the requested capacity.");
 
   await file.setLength(5);
   const readBytes = await readIoFile(file);
